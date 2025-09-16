@@ -4,6 +4,7 @@ import jwtPlugin from "./plugins/jwt";
 import loginRoute from "./routes/auth/login";
 import signupRoute from "./routes/auth/signup";
 import protectedRoute from "./routes/auth/protected";
+import subjectsRoutes from "./routes/subjects/index";
 
 const app = fastify({ logger: true });
 
@@ -19,6 +20,10 @@ app.register(jwtPlugin);
 app.register(loginRoute);
 app.register(signupRoute);
 app.register(protectedRoute);
+
+// subjects assuntos
+app.register(subjectsRoutes, { prefix: "/subjects" });
+
 
 const start = async () => {
   try {
