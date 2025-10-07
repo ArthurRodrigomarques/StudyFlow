@@ -2,8 +2,12 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../../plugins/prismaClient";
 
 export default async function getAll(app: FastifyInstance) {
-  app.get("/", { preHandler: [app.authenticate] }, async (req, reply) => {
-    const userId = (req.user as { userId: string }).userId;
+  app.get("/", { onRequest: [app.authenticate] }, async (req, reply) => {
+    if (!req.user) {
+      return reply.status(401).send({ error: "Não autorizado" });
+    }
+
+    const userId = req.user.id;
 
     try {
       const sessions = await prisma.session.findMany({

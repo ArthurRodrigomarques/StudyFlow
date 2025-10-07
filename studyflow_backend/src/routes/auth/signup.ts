@@ -2,48 +2,63 @@ import { FastifyInstance } from "fastify";
 import { z, ZodError } from "zod";
 import { supabase } from "../../plugins/supabaseClient";
 import { prisma } from "../../plugins/prismaClient";
-import bcrypt from "bcrypt";
 
 export default async function signupRoute(app: FastifyInstance) {
   app.post("/signup", async (req, reply) => {
     try {
       const schema = z.object({
         email: z.string().email(),
-        password: z.string().min(6),
-        name: z.string().min(1),
+        password: z
+          .string()
+          .min(6, "A senha precisa ter no mínimo 6 caracteres"),
+        name: z.string().min(3, "O nome é obrigatório"),
       });
 
       const { email, password, name } = schema.parse(req.body);
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error || !data?.user)
-        return reply
-          .status(400)
-          .send({
-            error: error?.message || "Erro ao criar usuário no Supabase",
-          });
-
-      const hashed = await bcrypt.hash(password, 10);
-
-      const prismaUser = await prisma.user.upsert({
-        where: { id: data.user.id },
-        update: { email: data.user.email ?? email, name, password: hashed },
-        create: {
-          id: data.user.id,
-          email: data.user.email ?? email,
-          name,
-          password: hashed,
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
         },
       });
 
-      const token = app.jwt.sign({ userId: prismaUser.id });
+      if (authError) {
+        return reply.status(400).send({ error: authError.message });
+      }
 
-      const { password: _, ...sanitized } = prismaUser as any;
+      if (!authData.user) {
+        return reply
+          .status(500)
+          .send({ error: "Não foi possível criar o usuário no Supabase." });
+      }
 
-      return reply.status(201).send({ token, user: sanitized });
-    } catch (err) {
-      if (err instanceof ZodError)
+      await prisma.user.create({
+        data: {
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: name,
+        },
+      });
+
+      return reply.status(201).send({
+        message: "Cadastro realizado! Verifique seu e-mail para confirmação.",
+        user: authData.user,
+      });
+    } catch (err: any) {
+      if (err instanceof ZodError) {
         return reply.status(400).send({ error: err.issues });
+      }
+
+      if (err.code === "P2002") {
+        return reply
+          .status(409)
+          .send({ error: "Um usuário com este e-mail já existe." });
+      }
+
       app.log.error(err);
       return reply.status(500).send({ error: "Erro interno no servidor" });
     }

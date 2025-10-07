@@ -2,10 +2,16 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "../../plugins/prismaClient";
 
 export default async function getAll(app: FastifyInstance) {
-  app.get("/", { preHandler: [app.authenticate] }, async (req: any, reply) => {
+  app.get("/", { onRequest: [app.authenticate] }, async (req, reply) => {
+    if (!req.user) {
+      return reply.status(401).send({ error: "Não autorizado" });
+    }
+
+    const userId = req.user.id;
+
     try {
       const goals = await prisma.goal.findMany({
-        where: { userId: req.user.userId },
+        where: { userId },
         orderBy: { createdAt: "desc" },
       });
 
@@ -14,7 +20,7 @@ export default async function getAll(app: FastifyInstance) {
       req.log.error(error);
       return reply
         .status(500)
-        .send({ error: "Não foi possivel listar as metas" });
+        .send({ error: "Não foi possível listar as metas" });
     }
   });
 }

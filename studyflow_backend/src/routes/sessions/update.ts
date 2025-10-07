@@ -3,28 +3,61 @@ import { z } from "zod";
 import { prisma } from "../../plugins/prismaClient";
 
 export default async function update(app: FastifyInstance) {
-  app.put("/:id", { preHandler: [app.authenticate] }, async (req, reply) => {
-    const paramsSchema = z.object({ id: z.string().uuid() });
-    const bodySchema = z.object({
-      duration: z.number().min(1).optional(),
-      notes: z.string().optional(),
-    });
+  app.put("/:id", { onRequest: [app.authenticate] }, async (req, reply) => {
+    if (!req.user) {
+      return reply.status(401).send({ error: "Não autorizado" });
+    }
 
-    const { id } = paramsSchema.parse(req.params);
-    const data = bodySchema.parse(req.body);
-    const userId = (req.user as { userId: string }).userId;
+    const paramsSchema = z.object({ id: z.string().uuid() });
+    const bodySchema = z
+      .object({
+        duration: z.number().min(1).optional(),
+        notes: z.string().nullable().optional(),
+      })
+      .strict();
+
+    const paramsValidation = paramsSchema.safeParse(req.params);
+    const bodyValidation = bodySchema.safeParse(req.body);
+
+    if (!paramsValidation.success || !bodyValidation.success) {
+      return reply.status(400).send({ error: "Dados inválidos" });
+    }
+
+    const { id } = paramsValidation.data;
+    const { duration, notes } = bodyValidation.data;
+    const userId = req.user.id;
+
+    const dataToUpdate: { duration?: number; notes?: string | null } = {};
+
+    if (duration !== undefined) {
+      dataToUpdate.duration = duration;
+    }
+    if (notes !== undefined) {
+      dataToUpdate.notes = notes;
+    }
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return reply
+        .status(400)
+        .send({ error: "Nenhum dado fornecido para atualização." });
+    }
 
     try {
-      const updated = await prisma.session.update({
-        where: { id, userId },
-        data: {
-          ...(data.duration !== undefined && {
-            duration: { set: data.duration },
-          }),
-          ...(data.notes !== undefined && { notes: { set: data.notes } }),
+      const result = await prisma.session.updateMany({
+        where: {
+          id,
+          userId,
         },
+        data: dataToUpdate,
       });
-      return reply.send(updated);
+
+      if (result.count === 0) {
+        return reply.status(404).send({
+          error: "Sessão não encontrada ou não pertence a este usuário.",
+        });
+      }
+
+      return reply.send({ message: "Sessão atualizada com sucesso" });
     } catch (err) {
       req.log.error(err);
       return reply
