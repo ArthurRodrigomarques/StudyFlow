@@ -10,10 +10,6 @@ const weeklyProgress = 78;
 const monthlyGoals = { completed: 5, total: 7 };
 const totalStudyTime = "24h 30m";
 const todayStudyTime = "3h 15m";
-const subjectsData = [
-  { name: "Matemática", progress: 85, time: "8h 45m", color: "#3b82f6" },
-  { name: "Física", progress: 62, time: "6h 20m", color: "#8b5cf6" },
-];
 
 export default function Dashboard() {
   return (
@@ -31,11 +27,10 @@ export default function Dashboard() {
 
           <div className="grid lg:grid-cols-3 gap-6">
             <WeeklyGoalRing weeklyProgress={weeklyProgress} />
-            <SubjectsProgress subjects={subjectsData} />
+            <SubjectsProgress />
           </div>
 
           <RecentSessions />
-
           <QuickActions />
         </main>
       </div>
