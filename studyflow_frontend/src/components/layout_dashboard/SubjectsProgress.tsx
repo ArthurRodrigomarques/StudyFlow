@@ -14,7 +14,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BookOpen, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 
 type Subject = {
   id: string;
@@ -22,6 +21,19 @@ type Subject = {
   color: string | null;
   progress: number;
   time: string;
+};
+
+// Função para formatar minutos em "Xh Ym"
+const formatDuration = (minutes: number): string => {
+  if (!minutes) return "0m";
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours > 0) {
+    return `${hours}h ${
+      remainingMinutes > 0 ? `${remainingMinutes}m` : ""
+    }`.trim();
+  }
+  return `${remainingMinutes}m`;
 };
 
 export default function SubjectsProgress() {
@@ -33,14 +45,16 @@ export default function SubjectsProgress() {
     const fetchSubjects = async () => {
       try {
         const response = await api.get("/subjects");
-        const subjectsWithFakeProgress = response.data.map((sub: any) => ({
-          ...sub,
+        // Agora usamos os dados reais que vêm do backend
+        const formattedSubjects = response.data.map((sub: any) => ({
+          id: sub.id,
+          name: sub.name,
+          color: sub.color,
+          time: formatDuration(sub.totalStudyTime), // Usando o tempo real
+          // O progresso ainda é um placeholder até definirmos metas por matéria
           progress: Math.floor(Math.random() * (90 - 40 + 1)) + 40,
-          time: `${Math.floor(Math.random() * 10)}h ${Math.floor(
-            Math.random() * 59
-          )}m`,
         }));
-        setSubjects(subjectsWithFakeProgress);
+        setSubjects(formattedSubjects);
       } catch (err) {
         setError("Não foi possível carregar as matérias.");
       } finally {
@@ -50,25 +64,10 @@ export default function SubjectsProgress() {
     fetchSubjects();
   }, []);
 
-  if (isLoading) {
-    return <SubjectsProgressSkeleton />;
-  }
+  // ... o resto do seu componente (isLoading, error, JSX) continua igual ...
+  // (O código que já está no seu arquivo está correto)
 
-  if (error) {
-    return (
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Progresso por Matéria</CardTitle>
-          <Alert variant="destructive" className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </CardHeader>
-      </Card>
-    );
-  }
-
+  // O JSX para exibir a lista:
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
@@ -86,7 +85,11 @@ export default function SubjectsProgress() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {subjects.length > 0 ? (
+        {isLoading ? (
+          <SubjectsProgressSkeleton />
+        ) : error ? (
+          <p className="text-destructive text-sm">{error}</p>
+        ) : subjects.length > 0 ? (
           subjects.map((subject) => (
             <div key={subject.id}>
               <div className="flex justify-between items-center mb-1">
@@ -110,7 +113,6 @@ export default function SubjectsProgress() {
     </Card>
   );
 }
-
 function SubjectsProgressSkeleton() {
   return (
     <Card className="lg:col-span-2">

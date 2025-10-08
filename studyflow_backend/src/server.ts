@@ -3,6 +3,7 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyCookie from "@fastify/cookie";
 import authenticatePlugin from "./plugins/authenticate";
+
 import loginRoute from "./routes/auth/login";
 import signupRoute from "./routes/auth/signup";
 import protectedRoute from "./routes/auth/protected";
@@ -10,6 +11,7 @@ import authMe from "./routes/auth/me";
 import subjectsRoutes from "./routes/subjects/index";
 import goalsRoutes from "./routes/goals";
 import sessionsRoutes from "./routes/sessions";
+import statsRoute from "./routes/stats/stats";
 
 const app = fastify({ logger: true });
 
@@ -18,6 +20,8 @@ const start = async () => {
   await app.register(cors, {
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   });
 
   await app.register(fastifyCookie, {
@@ -27,7 +31,7 @@ const start = async () => {
 
   await app.register(authenticatePlugin);
 
-  // rota teste
+  // --- ROTAS ---
   app.get("/", async () => {
     return { message: "Hello World" };
   });
@@ -42,6 +46,7 @@ const start = async () => {
   await app.register(subjectsRoutes, { prefix: "/subjects" });
   await app.register(goalsRoutes, { prefix: "/goals" });
   await app.register(sessionsRoutes, { prefix: "/sessions" });
+  await app.register(statsRoute);
 
   try {
     await app.listen({ port: 4000, host: "0.0.0.0" });
