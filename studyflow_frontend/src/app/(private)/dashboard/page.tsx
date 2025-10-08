@@ -13,28 +13,6 @@ const todayStudyTime = "3h 15m";
 const subjectsData = [
   { name: "Matemática", progress: 85, time: "8h 45m", color: "#3b82f6" },
   { name: "Física", progress: 62, time: "6h 20m", color: "#8b5cf6" },
-  { name: "Química", progress: 45, time: "4h 10m", color: "#16a34a" },
-  { name: "História", progress: 73, time: "5h 35m", color: "#f59e0b" },
-];
-const recentSessions = [
-  {
-    subject: "Matemática",
-    duration: "1h 30m",
-    date: "Hoje",
-    notes: "Derivadas e integrais",
-  },
-  {
-    subject: "Física",
-    duration: "45m",
-    date: "Ontem",
-    notes: "Leis de Newton",
-  },
-  {
-    subject: "Química",
-    duration: "2h",
-    date: "2 dias atrás",
-    notes: "Tabela periódica",
-  },
 ];
 
 export default function Dashboard() {
@@ -56,7 +34,8 @@ export default function Dashboard() {
             <SubjectsProgress subjects={subjectsData} />
           </div>
 
-          <RecentSessions sessions={recentSessions} />
+          <RecentSessions />
+
           <QuickActions />
         </main>
       </div>
