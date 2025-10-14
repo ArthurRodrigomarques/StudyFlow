@@ -23,7 +23,6 @@ type Subject = {
   time: string;
 };
 
-// Função para formatar minutos em "Xh Ym"
 const formatDuration = (minutes: number): string => {
   if (!minutes) return "0m";
   const hours = Math.floor(minutes / 60);
@@ -45,13 +44,11 @@ export default function SubjectsProgress() {
     const fetchSubjects = async () => {
       try {
         const response = await api.get("/subjects");
-        // Agora usamos os dados reais que vêm do backend
         const formattedSubjects = response.data.map((sub: any) => ({
           id: sub.id,
           name: sub.name,
           color: sub.color,
-          time: formatDuration(sub.totalStudyTime), // Usando o tempo real
-          // O progresso ainda é um placeholder até definirmos metas por matéria
+          time: formatDuration(sub.totalStudyTime), 
           progress: Math.floor(Math.random() * (90 - 40 + 1)) + 40,
         }));
         setSubjects(formattedSubjects);
@@ -64,10 +61,6 @@ export default function SubjectsProgress() {
     fetchSubjects();
   }, []);
 
-  // ... o resto do seu componente (isLoading, error, JSX) continua igual ...
-  // (O código que já está no seu arquivo está correto)
-
-  // O JSX para exibir a lista:
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
