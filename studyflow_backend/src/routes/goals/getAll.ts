@@ -6,7 +6,6 @@ export default async function getAll(app: FastifyInstance) {
     if (!req.user) {
       return reply.status(401).send({ error: "Não autorizado" });
     }
-
     const userId = req.user.id;
 
     try {
@@ -15,7 +14,19 @@ export default async function getAll(app: FastifyInstance) {
         orderBy: { createdAt: "desc" },
       });
 
-      return reply.send(goals);
+      const goalsWithStatus = goals.map((goal) => {
+        let status = "active";
+        if (goal.completed) {
+          status = "completed";
+        }
+
+        return {
+          ...goal,
+          status,
+        };
+      });
+
+      return reply.send(goalsWithStatus);
     } catch (error) {
       req.log.error(error);
       return reply

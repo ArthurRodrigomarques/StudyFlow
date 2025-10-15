@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { prisma } from "../../plugins/prismaClient";
+import { subDays } from "date-fns";
 
 export default async function getAll(app: FastifyInstance) {
   app.get("/", { onRequest: [app.authenticate] }, async (req, reply) => {
@@ -11,27 +12,38 @@ export default async function getAll(app: FastifyInstance) {
     try {
       const subjects = await prisma.subject.findMany({
         where: { userId },
+        include: {
+          sessions: {
+            orderBy: { date: "desc" },
+          },
+        },
         orderBy: { createdAt: "asc" },
       });
 
-      const durationSums = await prisma.session.groupBy({
-        by: ["subjectId"],
-        _sum: {
-          duration: true,
-        },
-        where: { userId },
+      const sevenDaysAgo = subDays(new Date(), 7);
+
+      const subjectsWithStats = subjects.map((subject) => {
+        const totalStudyTime = subject.sessions.reduce(
+          (sum, s) => sum + s.duration,
+          0
+        );
+        const weeklyTime = subject.sessions
+          .filter((s) => new Date(s.date) >= sevenDaysAgo)
+          .reduce((sum, s) => sum + s.duration, 0);
+
+        return {
+          id: subject.id,
+          name: subject.name,
+          color: subject.color,
+          createdAt: subject.createdAt,
+          totalStudyTime,
+          weeklyTime,
+          sessionsCount: subject.sessions.length,
+          lastStudied: subject.sessions[0]?.date || null,
+        };
       });
 
-      const durationMap = new Map(
-        durationSums.map((item) => [item.subjectId, item._sum.duration || 0])
-      );
-
-      const subjectsWithTotalTime = subjects.map((subject) => ({
-        ...subject,
-        totalStudyTime: durationMap.get(subject.id) || 0,
-      }));
-
-      return reply.send(subjectsWithTotalTime);
+      return reply.send(subjectsWithStats);
     } catch (error) {
       req.log.error(error);
       return reply

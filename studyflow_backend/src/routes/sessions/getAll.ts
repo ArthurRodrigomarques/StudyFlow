@@ -6,13 +6,19 @@ export default async function getAll(app: FastifyInstance) {
     if (!req.user) {
       return reply.status(401).send({ error: "Não autorizado" });
     }
-
     const userId = req.user.id;
 
     try {
       const sessions = await prisma.session.findMany({
         where: { userId },
-        include: { subject: true },
+        include: {
+          subject: {
+            select: {
+              name: true,
+              color: true,
+            },
+          },
+        },
         orderBy: { date: "desc" },
       });
 
