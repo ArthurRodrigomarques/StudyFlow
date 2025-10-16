@@ -80,7 +80,11 @@ export function GoalCard({ goal }: { goal: Goal }) {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer"
+              >
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -106,10 +110,10 @@ export function GoalCard({ goal }: { goal: Goal }) {
           <Progress value={goal.progress} />
         </div>
         <div className="flex gap-2 pt-2">
-          <Button asChild size="sm" className="flex-1">
+          <Button asChild size="sm" className="flex-1 cursor-pointer bg-blue-600">
             <Link href={`/metas/${goal.id}`}>Ver Detalhes</Link>
           </Button>
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1 cursor-pointer hover:bg-blue-600">
             <Plus className="w-4 h-4 mr-1" /> Atualizar Progresso
           </Button>
         </div>

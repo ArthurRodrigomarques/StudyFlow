@@ -20,7 +20,7 @@ export default function Header() {
         </div>
 
         <Button className="hover:bg-blue-500" asChild>
-          <Link href="/sessions/new" className="flex items-center">
+          <Link href="/sessions/newsession" className="flex items-center">
             <Plus className="w-4 h-4 mr-2" />
             Nova Sessão
           </Link>

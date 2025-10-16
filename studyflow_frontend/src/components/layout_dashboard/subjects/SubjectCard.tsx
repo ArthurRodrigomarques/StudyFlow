@@ -35,7 +35,7 @@ type SubjectCardProps = {
 
 export function SubjectCard({ subject }: SubjectCardProps) {
   return (
-    <Card className="flex flex-col h-full bg-card border border-border/20 hover:border-blue-500/50 transition-colors group">
+    <Card className="flex flex-col h-full bg-card border border-border/20 hover:border-blue-500/50 transition-colors group cursor-pointer">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-4">

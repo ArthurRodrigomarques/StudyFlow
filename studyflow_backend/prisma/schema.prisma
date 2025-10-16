@@ -39,10 +39,12 @@ model Goal {
 
 model Session {
   id        String   @id @default(uuid())
+  title     String?
   subjectId String
   userId    String
   duration  Int
   notes     String?
+  rating    Int?
   date      DateTime @default(now())
   subject   Subject  @relation(fields: [subjectId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
